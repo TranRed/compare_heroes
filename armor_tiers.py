@@ -5,7 +5,7 @@ import altair as alt
 import datetime
 
 ARMOR_TIERS = (1, 2, 3, 4, 5, 6, 7)
-TIMEFRAMES = ("Last 7 days", "Last 3 days", "Current Patch")
+TIMEFRAMES = ("Current Patch", "Last 7 days", "Last 3 days")
 DICT_TIMEFRAME_URL = {"Last 7 days": "past-seven",
                       "Last 3 days": "past-three",
                       "Current Patch": "last-patch"}
