@@ -10,7 +10,7 @@ DICT_TIMEFRAME_URL = {"Last 7 days": "past-seven",
                       "Last 3 days": "past-three",
                       "Current Patch": "last-patch"}
 
-@st.experimental_memo(show_spinner=False, ttl=900)
+@st.experimental_memo(show_spinner=False, ttl=1800)
 def load_firestone(timeframe):
     # get firestone averages
     print(f"Loading Firestone Data for timeframe: {timeframe}...")
@@ -29,7 +29,7 @@ def load_bgknowhow():
     return api_response.json(), update_time
 
 
-@st.experimental_memo(show_spinner=False, ttl=900)
+@st.experimental_memo(show_spinner=False, ttl=1800)
 def load_data(timeframe):
     firestone_json, firestone_update_time = load_firestone(timeframe)
     heroes_json, tier_update_time = load_bgknowhow()
