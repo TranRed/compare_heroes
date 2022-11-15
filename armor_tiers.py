@@ -6,33 +6,34 @@ import datetime
 
 ARMOR_TIERS = (1, 2, 3, 4, 5, 6, 7)
 TIMEFRAMES = ("Current Patch", "Last 7 days", "Last 3 days")
-DICT_TIMEFRAME_URL = {"Last 7 days": "past-seven",
-                      "Last 3 days": "past-three",
-                      "Current Patch": "last-patch"}
+TIMEFRAME_URL_PARAMETERS = {"Last 7 days": "past-seven",
+                            "Last 3 days": "past-three",
+                            "Current Patch": "last-patch"}
+
+def call_api(url):
+    api_response = requests.get(url)
+    update_time = datetime.datetime.now(datetime.timezone.utc)
+    return api_response.json(), update_time
 
 @st.experimental_memo(show_spinner=False, ttl=1800)
 def load_firestone(timeframe):
     # get firestone averages
     print(f"Loading Firestone Data for timeframe: {timeframe}...")
     api_url = 'https://static.zerotoheroes.com/api/bgs/heroes/bgs-global-stats-all-tribes-' + timeframe + '.gz.json'
-    api_response = requests.get(api_url)
-    update_time = datetime.datetime.now(datetime.timezone.utc)
-    return api_response.json(), update_time
+    return call_api(api_url)
 
 @st.experimental_memo(show_spinner=False, ttl=7200)
 def load_bgknowhow():
-    # get armor tiers
+    # get hero names and armor tiers
     print("Loading Armor Tiers ...")
     api_url = 'https://bgknowhow.com/bgjson/output/bg_heroes_all.json'
-    api_response = requests.get(api_url)
-    update_time = datetime.datetime.now(datetime.timezone.utc)
-    return api_response.json(), update_time
+    return call_api(api_url)
 
 
 @st.experimental_memo(show_spinner=False, ttl=1800)
 def load_data(timeframe):
     firestone_json, firestone_update_time = load_firestone(timeframe)
-    heroes_json, tier_update_time = load_bgknowhow()
+    heroes_json, bgknowhow_update_time = load_bgknowhow()
 
     print('Building DataFrames ...')
 
@@ -83,21 +84,21 @@ def load_data(timeframe):
     armor_averages = averages[['armor_tier', 'weighted_avg_armor', 'total_matches']].groupby(['armor_tier'],
                                                                                              as_index=False).sum()
 
-    return averages, armor_averages, firestone_update_time, tier_update_time
+    return averages, armor_averages, firestone_update_time, bgknowhow_update_time
 
 
 title = st.title('Armor Tier Averages')
 
 selected_timeframe = st.sidebar.selectbox('Time Frame', TIMEFRAMES)
 
-heroes, armor_tiers, last_data_update, last_tier_update = load_data(DICT_TIMEFRAME_URL[selected_timeframe])
+heroes, armor_tiers, last_firestone_update, last_bgknowhow_update = load_data(TIMEFRAME_URL_PARAMETERS[selected_timeframe])
 
-last_data_update = last_data_update.strftime("%Y-%m-%d %H:%M:%S %Z+0")
-last_tier_update = last_tier_update.strftime("%Y-%m-%d %H:%M:%S %Z+0")
+last_firestone_update = last_firestone_update.strftime("%Y-%m-%d %H:%M:%S %Z+0")
+last_bgknowhow_update = last_bgknowhow_update.strftime("%Y-%m-%d %H:%M:%S %Z+0")
 
-st.sidebar.markdown(f"Top 10%  averages updated at:  \n{last_data_update}  "
+st.sidebar.markdown(f"Top 10%  averages updated at:  \n{last_firestone_update}  "
                     f"\nprovided by [Firestone](https://www.firestoneapp.com/)")
-st.sidebar.markdown(f"Armor Tiers updated at:  \n{last_tier_update}"
+st.sidebar.markdown(f"Armor Tiers updated at:  \n{last_bgknowhow_update}"
                     f"  \nprovided by [BG Know-How](https://bgknowhow.com)")
 
 rounded_max = round(armor_tiers["weighted_avg_armor"].max(), 1)
@@ -125,7 +126,6 @@ with st.expander("Heroes per Tier"):
     st.table(heroes.loc[heroes.armor_tier == selected_tier, ['name', 'avg', 'total_matches']].
              set_index('name').sort_values(by='avg').
              rename(columns={"avg": "Average Placement", "total_matches": "Games played"}))
-
 
 with st.expander("Compare Heroes"):
     all_heroes = heroes['name'].unique()
