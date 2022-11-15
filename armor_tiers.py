@@ -88,7 +88,7 @@ def load_data(timeframe):
 
 title = st.title('Armor Tier Averages')
 
-selected_timeframe = st.sidebar.selectbox('Timeframe', TIMEFRAMES)
+selected_timeframe = st.sidebar.selectbox('Time Frame', TIMEFRAMES)
 
 heroes, armor_tiers, last_data_update, last_tier_update = load_data(DICT_TIMEFRAME_URL[selected_timeframe])
 
