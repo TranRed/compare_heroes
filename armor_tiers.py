@@ -10,6 +10,10 @@ TIMEFRAME_URL_PARAMETERS = {"Last 7 days": "past-seven",
                             "Last 3 days": "past-three",
                             "Current Patch": "last-patch"}
 
+SUBMIT_ISSUE_URL = "https://github.com/TranRed/armor_tiers/issues/new?"
+BUG_REPORT_PARAMETERS = "assignees=&labels=&template=bug_report.md&title=%5BBUG%5D+your+title"
+FEATURE_SUGGESTION_PARAMETER = "assignees=&labels=&template=feature_request.md&title=%5BFEATURE%5D+your+title"
+
 def call_api(url):
     api_response = requests.get(url)
     update_time = datetime.datetime.now(datetime.timezone.utc)
@@ -96,10 +100,22 @@ heroes, armor_tiers, last_firestone_update, last_bgknowhow_update = load_data(TI
 last_firestone_update = last_firestone_update.strftime("%Y-%m-%d %H:%M:%S %Z+0")
 last_bgknowhow_update = last_bgknowhow_update.strftime("%Y-%m-%d %H:%M:%S %Z+0")
 
-st.sidebar.markdown(f"Top 10%  averages updated at:  \n{last_firestone_update}  "
-                    f"\nprovided by [Firestone](https://www.firestoneapp.com/)")
-st.sidebar.markdown(f"Armor Tiers updated at:  \n{last_bgknowhow_update}"
+st.sidebar.markdown(f"Top 10%  averages updated at:"
+                    f"  \n{last_firestone_update}"
+                    f"  \nprovided by [Firestone](https://www.firestoneapp.com/)")
+st.sidebar.markdown(f"Armor Tiers updated at:"
+                    f"  \n{last_bgknowhow_update}"
                     f"  \nprovided by [BG Know-How](https://bgknowhow.com)")
+
+st.sidebar.markdown(f"**GitHub**"
+                    f"  \n[README](https://github.com/TranRed/armor_tiers#readme)"
+                    f"  \n[report a bug]({SUBMIT_ISSUE_URL}{BUG_REPORT_PARAMETERS})"
+                    f"  \n[suggest a feature]({SUBMIT_ISSUE_URL}{FEATURE_SUGGESTION_PARAMETER})")
+
+st.sidebar.markdown(f"**Links**"
+                    f"  \n[BG Curve Sheet](https://www.bgcurvesheet.com/)"
+                    f"  \n[Competitive BG Discord](https://discord.gg/DrmA2xWX45)"
+                    f"  \n[additional resources and guides](https://www.reddit.com/r/BobsTavern/wiki/index/)")
 
 rounded_max = round(armor_tiers["weighted_avg_armor"].max(), 1)
 if rounded_max <= armor_tiers["weighted_avg_armor"].max():
