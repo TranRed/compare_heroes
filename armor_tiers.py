@@ -19,27 +19,23 @@ def call_api(url):
     update_time = datetime.datetime.now(datetime.timezone.utc)
     return api_response.json(), update_time
 
-@st.experimental_memo(show_spinner=False, ttl=1800)
+@st.cache_data(show_spinner=False, ttl=1800)
 def load_firestone(timeframe):
     # get firestone averages
-    print(f"Loading Firestone Data for timeframe: {timeframe}...")
     api_url = 'https://static.zerotoheroes.com/api/bgs/heroes/bgs-global-stats-all-tribes-' + timeframe + '.gz.json'
     return call_api(api_url)
 
-@st.experimental_memo(show_spinner=False, ttl=7200)
+@st.cache_data(show_spinner=False, ttl=7200)
 def load_bgknowhow():
     # get hero names and armor tiers
-    print("Loading Armor Tiers ...")
     api_url = 'https://bgknowhow.com/bgjson/output/bg_heroes_all.json'
     return call_api(api_url)
 
 
-@st.experimental_memo(show_spinner=False, ttl=1800)
+@st.cache_data(show_spinner=False, ttl=1800)
 def load_data(timeframe):
     firestone_json, firestone_update_time = load_firestone(timeframe)
     heroes_json, bgknowhow_update_time = load_bgknowhow()
-
-    print('Building DataFrames ...')
 
     hero_data = pd.DataFrame(heroes_json['data'])
     hero_data.drop(columns=['nameShort', 'pool', 'health', 'armor', 'picture', 'pictureSmall', 'picturePortrait',
