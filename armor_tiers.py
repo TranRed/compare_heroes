@@ -83,6 +83,24 @@ def load_data(timeframe):
 
     armor_averages = averages[['armor_tier', 'weighted_avg_armor', 'total_matches']].groupby(['armor_tier'],
                                                                                              as_index=False).sum()
+    armor_averages['min'] = 0
+    armor_averages['min_name'] = ''
+    armor_averages['min_games'] = 0
+    armor_averages['max'] = 0
+    armor_averages['max_name'] = ''
+    armor_averages['max_games'] = 0
+
+    for index, row in armor_averages.iterrows():
+        armor_averages.at[index, 'min'] = averages.loc[averages.armor_tier == int(row.armor_tier)]['avg'].min()
+        armor_averages.at[index, 'min_name'] = averages.loc[averages.loc[averages.armor_tier ==
+                                                                         int(row.armor_tier)].avg.idxmin()]['name']
+        armor_averages.at[index, 'min_games'] = averages.loc[averages.loc[averages.armor_tier ==
+                                                                         int(row.armor_tier)].avg.idxmin()]['total_matches']
+        armor_averages.at[index, 'max'] = averages.loc[averages.armor_tier == int(row.armor_tier)]['avg'].max()
+        armor_averages.at[index, 'max_name'] = averages.loc[averages.loc[averages.armor_tier ==
+                                                                         int(row.armor_tier)].avg.idxmax()]['name']
+        armor_averages.at[index, 'max_games'] = averages.loc[averages.loc[averages.armor_tier ==
+                                                                          int(row.armor_tier)].avg.idxmax()]['total_matches']
 
     return averages, armor_averages, firestone_update_time, bgknowhow_update_time
 
@@ -113,18 +131,65 @@ st.sidebar.markdown(f"**Links**"
                     f"  \n[Competitive BG Discord](https://discord.gg/DrmA2xWX45)"
                     f"  \n[additional resources and guides](https://www.reddit.com/r/BobsTavern/wiki/index/)")
 
-rounded_max = round(armor_tiers["weighted_avg_armor"].max(), 1)
-if rounded_max <= armor_tiers["weighted_avg_armor"].max():
+
+show_min_max = st.checkbox("Show best and worse Heroes per Tier")
+
+max_column = "weighted_avg_armor"
+rounded_min = 3.8
+
+if show_min_max:
+    min_column = "min"
+    max_column = "max"
+
+    rounded_min = round(armor_tiers[min_column].min(), 1)
+    if rounded_min >= armor_tiers[min_column].min():
+        rounded_min -= 0.1
+
+rounded_max = round(armor_tiers[max_column].max(), 1)
+if rounded_max <= armor_tiers[max_column].max():
     rounded_max += 0.1
 
 bar_chart = alt.Chart(armor_tiers).mark_bar(size=75).encode(
     alt.X('armor_tier', title='Armor Tier'),
-    alt.Y('weighted_avg_armor', title='Average Placement', scale=alt.Scale(domain=[3.9, rounded_max])),
+    alt.Y('weighted_avg_armor', title='Average Placement', scale=alt.Scale(domain=[rounded_min, rounded_max])),
     tooltip=[alt.Tooltip('armor_tier', title="Armor Tier"),
-             alt.Tooltip('weighted_avg_armor', title="Average Placement"),
-             alt.Tooltip('total_matches', title="Games Played")],
+             alt.Tooltip('weighted_avg_armor', title="Average Placement", format=",.2f"),
+             alt.Tooltip('total_matches', title="Games Played", format=",.0f")],
     color=alt.condition(alt.datum.weighted_avg_armor < armor_tiers["weighted_avg_armor"].mean(),
-                        alt.value('orange'), alt.value('steelblue'))).configure_axisX(tickMinStep=1)
+                        alt.value('orange'), alt.value('steelblue')))
+if show_min_max:
+
+    tick_min = alt.Chart(armor_tiers).mark_tick(
+        color='red',
+        thickness=50,
+        size=3,
+    ).encode(x='armor_tier',
+             y='min',
+             tooltip=[alt.Tooltip('min_name', title='Hero'),
+                      alt.Tooltip('min', title="Average Placement", format=",.2f"),
+                      alt.Tooltip('min_games', title="Games Played", format=",.0f")])
+
+    tick_max = alt.Chart(armor_tiers).mark_tick(
+        color='red',
+        thickness=50,
+        size=3
+    ).encode(x='armor_tier',
+             y='max',
+             tooltip=[alt.Tooltip('max_name', title='Hero'),
+                      alt.Tooltip('max', title="Average Placement", format=",.2f"),
+                      alt.Tooltip('max_games', title="Games Played", format=",.0f")])
+
+    errorbars = alt.Chart(armor_tiers).mark_errorbar(color='red', opacity=0.4, thickness=3).encode(
+        x='armor_tier',
+        y='min',
+        y2='max',
+        tooltip=[alt.Tooltip('max', title="Worst Average", format=",.2f"),
+                 alt.Tooltip('weighted_avg_armor', title="Weighted Average", format=",.2f"),
+                 alt.Tooltip('min', title="Best Average", format=",.2f")])
+
+    bar_chart = bar_chart + errorbars + tick_min + tick_max
+
+bar_chart = bar_chart.configure_axisX(tickMinStep=1)
 
 st.altair_chart(bar_chart, use_container_width=True)
 
@@ -137,7 +202,9 @@ with st.expander("Heroes per Tier"):
 
     st.table(heroes.loc[heroes.armor_tier == selected_tier, ['name', 'avg', 'total_matches']].
              set_index('name').sort_values(by='avg').
-             rename(columns={"avg": "Average Placement", "total_matches": "Games played"}))
+             rename(columns={"avg": "Average Placement", "total_matches": "Games played"})
+             .style.format(subset=['Games played'], formatter="{:,.0f}")
+             .format(subset=['Average Placement'],formatter="{:,.2f}"))
 
 with st.expander("Compare Heroes"):
     all_heroes = heroes['name'].unique()
@@ -151,4 +218,6 @@ with st.expander("Compare Heroes"):
 
     st.table(heroes.loc[heroes.name.isin(hero_filter), ['name', 'armor_tier', 'avg', 'total_matches']].
              set_index('name').sort_values(by='avg').
-             rename(columns={"armor_tier": "Armor Tier", "avg": "Average Placement", "total_matches": "Games played"}))
+             rename(columns={"armor_tier": "Armor Tier", "avg": "Average Placement", "total_matches": "Games played"})
+             .style.format(subset=['Games played'], formatter="{:,.0f}").
+             format(subset=['Average Placement'],formatter="{:,.2f}"))
