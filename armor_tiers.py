@@ -141,9 +141,7 @@ if show_min_max:
     min_column = "min"
     max_column = "max"
 
-    rounded_min = round(armor_tiers[min_column].min(), 1)
-    if rounded_min >= armor_tiers[min_column].min():
-        rounded_min -= 0.1
+    rounded_min = round(armor_tiers[min_column].min(), 1) - 0.2
 
 rounded_max = round(armor_tiers[max_column].max(), 1)
 if rounded_max <= armor_tiers[max_column].max():
@@ -181,7 +179,7 @@ if show_min_max:
 
     errorbars = alt.Chart(armor_tiers).mark_errorbar(color='red', opacity=0.4, thickness=3).encode(
         x='armor_tier',
-        y='min',
+        y=alt.Y('min', title='Average Placement'),
         y2='max',
         tooltip=[alt.Tooltip('max', title="Worst Average", format=",.2f"),
                  alt.Tooltip('weighted_avg_armor', title="Weighted Average", format=",.2f"),
@@ -190,6 +188,7 @@ if show_min_max:
     bar_chart = bar_chart + errorbars + tick_min + tick_max
 
 bar_chart = bar_chart.configure_axisX(tickMinStep=1)
+bar_chart = bar_chart.configure_axisY(title="Average Placement")
 
 st.altair_chart(bar_chart, use_container_width=True)
 
