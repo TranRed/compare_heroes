@@ -92,15 +92,20 @@ def load_data(timeframe):
 
     for index, row in armor_averages.iterrows():
         armor_averages.at[index, 'min'] = averages.loc[averages.armor_tier == int(row.armor_tier)]['avg'].min()
-        armor_averages.at[index, 'min_name'] = averages.loc[averages.loc[averages.armor_tier ==
-                                                                         int(row.armor_tier)].avg.idxmin()]['name']
-        armor_averages.at[index, 'min_games'] = averages.loc[averages.loc[averages.armor_tier ==
-                                                                         int(row.armor_tier)].avg.idxmin()]['total_matches']
+
+        armor_averages.at[index, 'min_name'] = \
+            averages.loc[averages.loc[averages.armor_tier == int(row.armor_tier)].avg.idxmin()]['name']
+
+        armor_averages.at[index, 'min_games'] = \
+            averages.loc[averages.loc[averages.armor_tier == int(row.armor_tier)].avg.idxmin()]['total_matches']
+
         armor_averages.at[index, 'max'] = averages.loc[averages.armor_tier == int(row.armor_tier)]['avg'].max()
-        armor_averages.at[index, 'max_name'] = averages.loc[averages.loc[averages.armor_tier ==
-                                                                         int(row.armor_tier)].avg.idxmax()]['name']
-        armor_averages.at[index, 'max_games'] = averages.loc[averages.loc[averages.armor_tier ==
-                                                                          int(row.armor_tier)].avg.idxmax()]['total_matches']
+
+        armor_averages.at[index, 'max_name'] = \
+            averages.loc[averages.loc[averages.armor_tier == int(row.armor_tier)].avg.idxmax()]['name']
+
+        armor_averages.at[index, 'max_games'] = \
+            averages.loc[averages.loc[averages.armor_tier == int(row.armor_tier)].avg.idxmax()]['total_matches']
 
     return averages, armor_averages, firestone_update_time, bgknowhow_update_time
 
@@ -109,7 +114,8 @@ title = st.title('Armor Tier Averages')
 
 selected_timeframe = st.sidebar.selectbox('Time Frame', TIMEFRAMES)
 
-heroes, armor_tiers, last_firestone_update, last_bgknowhow_update = load_data(TIMEFRAME_URL_PARAMETERS[selected_timeframe])
+heroes, armor_tiers, last_firestone_update, last_bgknowhow_update = \
+    load_data(TIMEFRAME_URL_PARAMETERS[selected_timeframe])
 
 last_firestone_update = last_firestone_update.strftime("%Y-%m-%d %H:%M:%S %Z+0")
 last_bgknowhow_update = last_bgknowhow_update.strftime("%Y-%m-%d %H:%M:%S %Z+0")
@@ -177,7 +183,7 @@ if show_min_max:
                       alt.Tooltip('max', title="Average Placement", format=",.2f"),
                       alt.Tooltip('max_games', title="Games Played", format=",.0f")])
 
-    errorbars = alt.Chart(armor_tiers).mark_errorbar(color='red', opacity=0.4, thickness=3).encode(
+    error_bars = alt.Chart(armor_tiers).mark_errorbar(color='red', opacity=0.4, thickness=3).encode(
         x='armor_tier',
         y=alt.Y('min', title='Average Placement'),
         y2='max',
@@ -185,7 +191,7 @@ if show_min_max:
                  alt.Tooltip('weighted_avg_armor', title="Weighted Average", format=",.2f"),
                  alt.Tooltip('min', title="Best Average", format=",.2f")])
 
-    bar_chart = bar_chart + errorbars + tick_min + tick_max
+    bar_chart = bar_chart + error_bars + tick_min + tick_max
 
 bar_chart = bar_chart.configure_axisX(tickMinStep=1)
 bar_chart = bar_chart.configure_axisY(title="Average Placement")
@@ -203,7 +209,7 @@ with st.expander("Heroes per Tier"):
              set_index('name').sort_values(by='avg').
              rename(columns={"avg": "Average Placement", "total_matches": "Games played"})
              .style.format(subset=['Games played'], formatter="{:,.0f}")
-             .format(subset=['Average Placement'],formatter="{:,.2f}"))
+             .format(subset=['Average Placement'], formatter="{:,.2f}"))
 
 with st.expander("Compare Heroes"):
     all_heroes = heroes['name'].unique()
@@ -219,4 +225,4 @@ with st.expander("Compare Heroes"):
              set_index('name').sort_values(by='avg').
              rename(columns={"armor_tier": "Armor Tier", "avg": "Average Placement", "total_matches": "Games played"})
              .style.format(subset=['Games played'], formatter="{:,.0f}").
-             format(subset=['Average Placement'],formatter="{:,.2f}"))
+             format(subset=['Average Placement'], formatter="{:,.2f}"))
