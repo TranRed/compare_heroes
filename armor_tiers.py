@@ -149,9 +149,7 @@ if show_min_max:
 
     rounded_min = round(armor_tiers[min_column].min(), 1) - 0.2
 
-rounded_max = round(armor_tiers[max_column].max(), 1)
-if rounded_max <= armor_tiers[max_column].max():
-    rounded_max += 0.1
+rounded_max = round(armor_tiers[max_column].max(), 1) + 0.2
 
 bar_chart = alt.Chart(armor_tiers).mark_bar(size=75).encode(
     alt.X('armor_tier', title='Armor Tier'),
