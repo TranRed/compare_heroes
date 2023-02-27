@@ -117,6 +117,9 @@ selected_timeframe = st.sidebar.selectbox('Time Frame', TIMEFRAMES)
 heroes, armor_tiers, last_firestone_update, last_bgknowhow_update = \
     load_data(TIMEFRAME_URL_PARAMETERS[selected_timeframe])
 
+all_heroes = heroes['name'].unique()
+all_heroes.sort()
+
 last_firestone_update = last_firestone_update.strftime("%Y-%m-%d %H:%M:%S %Z+0")
 last_bgknowhow_update = last_bgknowhow_update.strftime("%Y-%m-%d %H:%M:%S %Z+0")
 
@@ -138,7 +141,7 @@ st.sidebar.markdown(f"**Links**"
                     f"  \n[additional resources and guides](https://www.reddit.com/r/BobsTavern/wiki/index/)")
 
 
-show_min_max = st.checkbox("Show best and worse Heroes per Tier")
+show_min_max = st.checkbox("NEW: Show best and worse Heroes per Tier")
 
 max_column = "weighted_avg_armor"
 rounded_min = 3.8
@@ -191,6 +194,23 @@ if show_min_max:
 
     bar_chart = bar_chart + error_bars + tick_min + tick_max
 
+    heroes_on_chart = st.multiselect('Add Hero markers: (optional)', all_heroes)
+
+    if heroes_on_chart:
+        filtered_heroes = heroes.loc[heroes.name.isin(heroes_on_chart)]
+
+        tick_heroes = alt.Chart(filtered_heroes).mark_tick(
+            color='white',
+            thickness=50,
+            size=3,
+        ).encode(x='armor_tier',
+                 y='avg',
+                 tooltip=[alt.Tooltip('name', title='Hero'),
+                          alt.Tooltip('avg', title="Average Placement", format=",.2f"),
+                          alt.Tooltip('total_matches', title="Games Played", format=",.0f")])
+
+        bar_chart = bar_chart + tick_heroes
+
 bar_chart = bar_chart.configure_axisX(tickMinStep=1)
 bar_chart = bar_chart.configure_axisY(title="Average Placement")
 
@@ -210,8 +230,6 @@ with st.expander("Heroes per Tier"):
              .format(subset=['Average Placement'], formatter="{:,.2f}"))
 
 with st.expander("Compare Heroes"):
-    all_heroes = heroes['name'].unique()
-    all_heroes.sort()
     selected_heroes = st.multiselect('Pick the heroes you want to compare', all_heroes)
 
     if selected_heroes:
