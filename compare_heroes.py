@@ -14,22 +14,27 @@ SUBMIT_ISSUE_URL = "https://github.com/TranRed/armor_tiers/issues/new?"
 BUG_REPORT_PARAMETERS = "assignees=&labels=&template=bug_report.md&title=%5BBUG%5D+your+title"
 FEATURE_SUGGESTION_PARAMETER = "assignees=&labels=&template=feature_request.md&title=%5BFEATURE%5D+your+title"
 
+
 def call_api(url):
     api_response = requests.get(url)
     update_time = datetime.datetime.now(datetime.timezone.utc)
     return api_response.json(), update_time
 
+
 @st.cache_data(show_spinner=False, ttl=21600)
 def load_firestone(timeframe):
     # get firestone averages
-    api_url = 'https://static.zerotoheroes.com/api/bgs/heroes/bgs-global-stats-all-tribes-' + timeframe + '.gz.json'
+    # bypass buffer with v=1 ;)
+    api_url = f'https://static.zerotoheroes.com/api/bgs/heroes/bgs-global-stats-all-tribes-{timeframe}.gz.json?v=1'
     return call_api(api_url)
+
 
 @st.cache_data(show_spinner=False, ttl=21600)
 def load_bgknowhow():
     # get hero names and armor tiers
     api_url = 'https://bgknowhow.com/bgjson/output/bg_heroes_all.json'
     return call_api(api_url)
+
 
 @st.cache_data(show_spinner=False, ttl=21600)
 def load_curvesheet():
@@ -54,67 +59,17 @@ def load_curvesheet():
     curves['Alternative Curve'].replace('X', '', inplace=True)
 
     # fit hero names
-    # noinspection SpellCheckingInspection
-    name_replacements = {'Al Akir': 'Al\'Akir',
-                         'Aranna': 'Aranna Starseeker',
-                         'Rafaam': 'Arch-Villain Rafaam',
-                         'Brukan': 'Bru\'kan',
-                         'Cthun': 'C\'Thun',
-                         'Eudora': 'Captain Eudora',
-                         'Hooktusk': 'Captain Hooktusk',
-                         'Cariel': 'Cariel Roame',
-                         'Cookie': 'Cookie the Cook',
-                         'Deryl': 'Dancin\' Deryl',
-                         'Blackthorn': 'Death Speaker Blackthorn',
-                         'Brann': 'Dinotamer Brann',
-                         'ETC': 'E.T.C., Band Manager',
-                         'Edwin': 'Edwin VanCleef',
-                         'Elise': 'Elise Starseeker',
-                         'Omu': 'Forest Warden Omu',
-                         'Flurgl': 'Fungalmancer Flurgl',
-                         'George': 'George the Fallen',
-                         'Guff': 'Guff Runetotem',
-                         'Illidan': 'Illidan Stormrage',
-                         'Toki': 'Infinite Toki',
-                         'Jandice': 'Jandice Barov',
-                         'Kaelthas': 'Kael\'thas Sunstrider',
-                         'Mukla': 'King Mukla',
-                         'Kurtrus': 'Kurtrus Ashfallen',
-                         'Lich Bazhial': 'Lich Baz\'hial',
-                         'Barov': 'Lord Barov',
-                         'Jaraxxus': 'Lord Jaraxxus',
-                         'Maiev': 'Maiev Shadowsong',
-                         'Nguyen': 'Master Nguyen',
-                         'Millhouse': 'Millhouse Manastorm',
-                         'Millificent': 'Millificent Manastorm',
-                         'Bigglesworth': 'Mr. Bigglesworth',
-                         'Mutanus': 'Mutanus the Devourer',
-                         'Nzoth': 'N\'Zoth',
-                         'Saurfang': 'Overlord Saurfang',
-                         'Patches': 'Patches the Pirate',
-                         'Wagtoggle': 'Queen Wagtoggle',
-                         'Ragnaros': 'Ragnaros the Firelord',
-                         'Scabbs': 'Scabbs Cutterbutter',
-                         'Silas': 'Silas Darkmoon',
-                         'Finley': 'Sir Finley Mrrgglton',
-                         'Kragg': 'Skycap\'n Kragg',
-                         'Tamsin': 'Tamsin Roame',
-                         'Tess': 'Tess Greymane',
-                         'Curator': 'The Curator',
-                         'Akazamzarak': 'The Great Akazamzarak',
-                         'Jailer': 'The Jailer',
-                         'Lich King': 'The Lich King',
-                         'Rat King': 'The Rat King',
-                         'Gallywix': 'Trade Prince Gallywix',
-                         'Vanndar': 'Vanndar Stormpike',
-                         'Varden': 'Varden Dawngrasp',
-                         'Voljin': 'Vol\'jin',
-                         'Yshaarj': 'Y\'Shaarj',
-                         'Yogg': 'Yogg-Saron, Hope\'s End',
-                         'Zephrys': 'Zephrys, the Great'}
+    sheet_id = '18o-dPKSzGNZyUjP43dBuYD5heFYpKEP_Z680f8c3s8g'
+    tab_name = '{Heros}'
+
+    hero_names = pd.read_csv(f"{google_sheets}{sheet_id}{gviz_prefix}{tab_name}")
+    hero_names.drop(columns=['HeroKey', 'French', 'Japanese'], inplace=True)
+
+    name_replacements = hero_names.set_index('HeroName').to_dict()['Official Name']
 
     curves.replace({'name': name_replacements}, inplace=True)
     return curves
+
 
 @st.cache_data(show_spinner=False, ttl=1800)
 def load_data(timeframe):
@@ -125,7 +80,7 @@ def load_data(timeframe):
     hero_data = pd.DataFrame(heroes_json['data'])
     hero_data['armorHighMMR'].fillna(hero_data['armor'], inplace=True)
     hero_data['hp'] = hero_data['health'] + hero_data['armorHighMMR']
-    hero_data.drop(columns=['nameShort', 'armorTier', 'armor', 'pool', 'picture', 'pictureSmall', 'picturePortrait',
+    hero_data.drop(columns=['nameShort', 'armor', 'pool', 'picture', 'pictureSmall', 'picturePortrait',
                             'heroPowerCost', 'heroPowerText', 'heroPowerId', 'heroPowerPicture',
                             'heroPowerPictureSmall',
                             'websites', 'isActive'], inplace=True)
@@ -150,6 +105,9 @@ def load_data(timeframe):
             hero_list.append(hero_series)
 
     firestone_data = pd.DataFrame(hero_list)
+
+    # drop weird bob hero
+    firestone_data.drop(firestone_data.loc[firestone_data['id'] == 'TB_BaconShop_HERO_PH'].index, inplace=True)
     firestone_data['avg'] = (firestone_data['1'] * 1 +
                              firestone_data['2'] * 2 +
                              firestone_data['3'] * 3 +
@@ -164,6 +122,8 @@ def load_data(timeframe):
 
     return averages, firestone_update_time, bgknowhow_update_time
 
+
+st.set_page_config(layout="wide")
 
 title = st.title('Compare Heroes:')
 
@@ -181,9 +141,13 @@ last_bgknowhow_update = last_bgknowhow_update.strftime("%Y-%m-%d %H:%M:%S %Z+0")
 st.sidebar.markdown(f"Top 10%  averages updated at:"
                     f"  \n{last_firestone_update}"
                     f"  \nprovided by [Firestone](https://www.firestoneapp.com/)")
+
 st.sidebar.markdown(f"Hero Data updated at:"
                     f"  \n{last_bgknowhow_update}"
                     f"  \nprovided by [BG Know-How](https://bgknowhow.com)")
+
+st.sidebar.markdown(f"Rankings, curves and Quick Guides:"
+                    f"  \nprovided by [BG Curve Sheet](https://www.bgcurvesheet.com/)")
 
 st.sidebar.markdown(f"**GitHub**"
                     f"  \n[README](https://github.com/TranRed/armor_tiers#readme)"
@@ -191,7 +155,6 @@ st.sidebar.markdown(f"**GitHub**"
                     f"  \n[suggest a feature]({SUBMIT_ISSUE_URL}{FEATURE_SUGGESTION_PARAMETER})")
 
 st.sidebar.markdown(f"**Links**"
-                    f"  \n[BG Curve Sheet](https://www.bgcurvesheet.com/)"
                     f"  \n[Competitive BG Discord](https://discord.gg/DrmA2xWX45)"
                     f"  \n[additional resources and guides](https://www.reddit.com/r/BobsTavern/wiki/index/)")
 
@@ -226,12 +189,6 @@ st.caption("Hover for Jkirek Quick Guide")
 
 st.altair_chart(scatter_plot, use_container_width=True)
 
-# rename:
-# ['name', 'hp', 'health', 'armorHighMMR', 'avg', 'total_matches',
-#           'Player Ranking', 'Main Curve', 'Alternative Curve']].
-
-# format:
-# 'HP total', 'Health', 'Armor',
 st.dataframe(selected_data[['name', 'Player Ranking', 'avg', 'total_matches', 'Main Curve', 'Alternative Curve']]
              .rename(columns={"name": "Hero", "avg": "Avg.", "total_matches": "Games", "Player Ranking": "Ranking"})
              .set_index('Hero').sort_values(by="Avg.")
