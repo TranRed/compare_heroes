@@ -22,8 +22,7 @@ def call_api(url):
 
 @st.cache_data(show_spinner=False, ttl=21600)
 def load_firestone(timeframe):
-    # get firestone averages
-    # bypass buffer with v=1 ;)
+    # get firestone averages - bypass buffer with v=1 ;)
     api_url = f'https://static.zerotoheroes.com/api/bgs/heroes/bgs-global-stats-all-tribes-{timeframe}.gz.json?v=1'
     return call_api(api_url)
 
@@ -35,15 +34,17 @@ def load_bgknowhow():
     return call_api(api_url)
 
 
+def read_google_sheets(sheet_id, tab_name):
+    google_sheets = 'https://docs.google.com/spreadsheets/d/'
+    gviz_prefix = '/gviz/tq?tqx=out:csv&sheet='
+
+    return pd.read_csv(f"{google_sheets}{sheet_id}{gviz_prefix}{tab_name}")
+
+
 @st.cache_data(show_spinner=False, ttl=21600)
 def load_curvesheet():
-    google_sheets = 'https://docs.google.com/spreadsheets/d/'
-    # noinspection SpellCheckingInspection
-    sheet_id = '1J_NuzXHEsppgrAWJzLEZwESfiiNyURo3pCBAO1ga2mE'
-    gviz_prefix = '/gviz/tq?tqx=out:csv&sheet='
-    tab_name = '{Hero}'
-
-    curvesheet_raw = pd.read_csv(f"{google_sheets}{sheet_id}{gviz_prefix}{tab_name}")
+    curvesheet_raw = read_google_sheets(sheet_id='1J_NuzXHEsppgrAWJzLEZwESfiiNyURo3pCBAO1ga2mE',
+                                        tab_name='{Hero}')
 
     curves = curvesheet_raw[['Managed by Minder Heroes Hero', 'Twitter Ranking Players',
                             ' Support the Curvesheet: Patreon Curves Suggestions Main Curve',
@@ -58,10 +59,7 @@ def load_curvesheet():
     curves['Alternative Curve'].replace('X', '', inplace=True)
 
     # fit hero names
-    sheet_id = '18o-dPKSzGNZyUjP43dBuYD5heFYpKEP_Z680f8c3s8g'
-    tab_name = '{Heros}'
-
-    hero_names = pd.read_csv(f"{google_sheets}{sheet_id}{gviz_prefix}{tab_name}")
+    hero_names = read_google_sheets(sheet_id='18o-dPKSzGNZyUjP43dBuYD5heFYpKEP_Z680f8c3s8g', tab_name='{Heros}')
     hero_names.drop(columns=['HeroKey', 'French', 'Japanese'], inplace=True)
 
     name_replacements = hero_names.set_index('HeroName').to_dict()['Official Name']
