@@ -186,8 +186,10 @@ st.caption("Hover for Jkirek Quick Guide")
 
 st.altair_chart(scatter_plot, use_container_width=True)
 
-st.dataframe(selected_data[['name', 'Player Ranking', 'avg', 'total_matches', 'Main Curve', 'Alternative Curve']]
-             .rename(columns={"name": "Hero", "avg": "Avg.", "total_matches": "Games", "Player Ranking": "Ranking"})
+st.dataframe(selected_data[['name', 'armorHighMMR', 'Player Ranking', 'avg',  'total_matches',
+                            'Main Curve', 'Alternative Curve']]
+             .rename(columns={"name": "Hero", "armorHighMMR": "Armor", "avg": "Avg.",
+                              "total_matches": "Games", "Player Ranking": "Ranking"})
              .set_index('Hero').sort_values(by="Avg.")
-             .style.format(subset=['Games'], formatter="{:,.0f}")
+             .style.format(subset=['Games', "Armor"], formatter="{:,.0f}")
              .format(subset=['Avg.'], formatter="{:,.2f}"), use_container_width=True)
