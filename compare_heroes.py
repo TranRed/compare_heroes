@@ -78,7 +78,7 @@ def load_data(timeframe):
     hero_data['armorHighMMR'].fillna(hero_data['armor'], inplace=True)
     hero_data['hp'] = hero_data['health'] + hero_data['armorHighMMR']
     hero_data.drop(columns=['nameShort', 'armor', 'pool', 'picture', 'pictureSmall', 'picturePortrait',
-                            'heroPowerCost', 'heroPowerText', 'heroPowerId', 'heroPowerPicture',
+                            'pictureWhole', 'heroPowerCost', 'heroPowerText', 'heroPowerId', 'heroPowerPicture',
                             'heroPowerPictureSmall',
                             'websites', 'isActive'], inplace=True)
 
