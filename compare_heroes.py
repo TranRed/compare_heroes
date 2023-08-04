@@ -3,6 +3,7 @@ import pandas as pd
 import streamlit as st
 import altair as alt
 import datetime
+import random
 
 TIMEFRAMES = ("Current Patch", "Last 7 days", "Last 3 days")
 TIMEFRAME_URL_PARAMETERS = {"Last 7 days": "past-seven",
@@ -13,6 +14,7 @@ SUBMIT_ISSUE_URL = "https://github.com/TranRed/compare_heroes/issues/new?"
 BUG_REPORT_PARAMETERS = "assignees=&labels=&template=bug_report.md&title=%5BBUG%5D+your+title"
 FEATURE_SUGGESTION_PARAMETER = "assignees=&labels=&template=feature_request.md&title=%5BFEATURE%5D+your+title"
 
+ICON_LIST = ["🔎", "🔬", "⚗️", "🧪", "🧫", "🧬", "🧮", "📊", "👩‍🔬", "👩🏾‍🔬", "👨🏼‍🔬", "👨🏿‍🔬", "💡", "🧠"]
 
 def call_api(url):
     api_response = requests.get(url)
@@ -121,7 +123,7 @@ def load_data(timeframe):
 
 
 st.set_page_config(layout="wide",
-                   page_icon="🔎",
+                   page_icon=random.choice(ICON_LIST),
                    page_title="Compare BG Heroes",
                    )
 
