@@ -120,7 +120,10 @@ def load_data(timeframe):
     return averages, firestone_update_time, bgknowhow_update_time
 
 
-st.set_page_config(layout="wide")
+st.set_page_config(layout="wide",
+                   page_icon="🔎",
+                   page_title="Compare BG Heroes",
+                   )
 
 title = st.title('Compare Heroes:')
 
