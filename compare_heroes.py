@@ -22,14 +22,14 @@ def call_api(url):
     return api_response.json(), update_time
 
 
-@st.cache_data(show_spinner=False, ttl=21600)
+@st.cache_data(show_spinner=False, ttl="21600s")
 def load_firestone(timeframe):
     # get firestone averages - bypass buffer with v=1 ;)
-    api_url = f'https://static.zerotoheroes.com/api/bgs/heroes/bgs-global-stats-all-tribes-{timeframe}.gz.json?v=1'
+    api_url = f'https://static.zerotoheroes.com/api/bgs/stats-v2/light/mmr-10/bgs-{timeframe}.gz.json?v=1'
     return call_api(api_url)
 
 
-@st.cache_data(show_spinner=False, ttl=21600)
+#@st.cache_data(show_spinner=False, ttl="21600s")
 def load_bgknowhow():
     # get hero names and armor tiers
     api_url = 'https://bgknowhow.com/bgjson/output/bg_heroes_all.json'
@@ -84,40 +84,18 @@ def load_data(timeframe):
                             'heroPowerPictureSmall',
                             'websites', 'isActive'], inplace=True)
 
-    hero_list = []
-    for item in firestone_json['heroStats']:
-        if item['mmrPercentile'] == 10:
-            hero_series = pd.Series({'id': item['cardId'],
-                                     'total_matches': item['totalMatches'],
-                                     '1': 0,
-                                     '2': 0,
-                                     '3': 0,
-                                     '4': 0,
-                                     '5': 0,
-                                     '6': 0,
-                                     '7': 0,
-                                     '8': 0})
-
-            for placement in item['placementDistribution']:
-                hero_series[str(placement['rank'])] = placement['totalMatches']
-
-            hero_list.append(hero_series)
-
-    firestone_data = pd.DataFrame(hero_list)
+    firestone_data = pd.DataFrame(firestone_json['heroStats'])
+    firestone_data.rename(columns={'heroCardId': "id", 'dataPoints': "total_matches", 'averagePosition': "avg"},
+                          inplace=True)
 
     # drop weird bob hero
-    firestone_data.drop(firestone_data.loc[firestone_data['id'] == 'TB_BaconShop_HERO_PH'].index, inplace=True)
-    firestone_data['avg'] = (firestone_data['1'] * 1 +
-                             firestone_data['2'] * 2 +
-                             firestone_data['3'] * 3 +
-                             firestone_data['4'] * 4 +
-                             firestone_data['5'] * 5 +
-                             firestone_data['6'] * 6 +
-                             firestone_data['7'] * 7 +
-                             firestone_data['8'] * 8) / firestone_data['total_matches']
+    firestone_data.drop(firestone_data.loc[firestone_data['id'] == 'TB_BaconShop_HERO_PH'].index,
+                        inplace=True)
 
     averages = pd.merge(firestone_data, hero_data, how='left', on='id')
     averages = pd.merge(averages, df_curves, how='left', on='name')
+
+    averages.drop(averages.loc[averages['name'].isna()].index, inplace=True)
 
     return averages, firestone_update_time, bgknowhow_update_time
 
