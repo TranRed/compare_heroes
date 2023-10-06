@@ -29,7 +29,7 @@ def load_firestone(timeframe):
     return call_api(api_url)
 
 
-#@st.cache_data(show_spinner=False, ttl="21600s")
+@st.cache_data(show_spinner=False, ttl="21600s")
 def load_bgknowhow():
     # get hero names and armor tiers
     api_url = 'https://bgknowhow.com/bgjson/output/bg_heroes_all.json'
