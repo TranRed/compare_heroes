@@ -139,8 +139,8 @@ st.sidebar.markdown(f"Hero Data updated at:"
                     f"  \nprovided by [BG Know-How](https://bgknowhow.com)")
 
 st.sidebar.markdown(f"Rankings, curves and Quick Guides:"
-                    f"  \nprovided by [BG Curve Sheet](https://www.bgcurvesheet.com/)"
-                    f"  \n**(not available in spell meta)**")
+                    f"  \n**(not available in spell meta)**"
+                    f"  \nprovided by [BG Curve Sheet](https://www.bgcurvesheet.com/)")
 
 st.sidebar.markdown(f"**GitHub**"
                     f"  \n[README](https://github.com/TranRed/armor_tiers#readme)"
