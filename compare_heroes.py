@@ -57,8 +57,16 @@ def load_curvesheet():
                   inplace=True)
 
     # no curve suggestions
-    curves['Main Curve'].replace('X', '', inplace=True)
-    curves['Alternative Curve'].replace('X', '', inplace=True)
+    # curves['Main Curve'].replace('X', '', inplace=True)
+    # curves['Alternative Curve'].replace('X', '', inplace=True)
+
+    # TO-DO Temporary state or spell meta
+    curves.drop(columns=['Player Ranking', 'Quick Guide', 'Main Curve','Alternative Curve'], inplace=True)
+    curves['Player Ranking'] = ""
+    curves['Quick Guide'] = ""
+    curves['Main Curve'] = ""
+
+    curves['Alternative Curve'] = ""
 
     # fit hero names
     hero_names = read_google_sheets(sheet_id='18o-dPKSzGNZyUjP43dBuYD5heFYpKEP_Z680f8c3s8g', tab_name='{Heros}')
@@ -131,7 +139,8 @@ st.sidebar.markdown(f"Hero Data updated at:"
                     f"  \nprovided by [BG Know-How](https://bgknowhow.com)")
 
 st.sidebar.markdown(f"Rankings, curves and Quick Guides:"
-                    f"  \nprovided by [BG Curve Sheet](https://www.bgcurvesheet.com/)")
+                    f"  \nprovided by [BG Curve Sheet](https://www.bgcurvesheet.com/)"
+                    f"  \n**(not available in spell meta)**")
 
 st.sidebar.markdown(f"**GitHub**"
                     f"  \n[README](https://github.com/TranRed/armor_tiers#readme)"
@@ -162,19 +171,24 @@ scatter_plot = alt.Chart(selected_data).mark_circle(size=60).encode(
                                               domain=[heroes.total_matches.min(), heroes.total_matches.max()],
                                               reverse=True)),
                     tooltip=[alt.Tooltip('name', title='Hero'),
-                             alt.Tooltip('Quick Guide'),
+                             # TO-DO Temporary state or spell meta
+                             #alt.Tooltip('Quick Guide'),
                              alt.Tooltip('avg', title="Average Placement", format=",.2f"),
                              alt.Tooltip('total_matches', title="Games Played", format=",.0f"),
                              alt.Tooltip('hp', title='HP total'),
                              alt.Tooltip('health', title='Health'),
                              alt.Tooltip('armorHighMMR', title='Armor (High MMR)')]
                 ).interactive()
-st.caption("Hover for Jkirek Quick Guide")
+# TO-DO Temporary state or spell meta
+#st.caption("Hover for Jkirek Quick Guide")
 
 st.altair_chart(scatter_plot, use_container_width=True)
 
-st.dataframe(selected_data[['name', 'armorHighMMR', 'Player Ranking', 'avg',  'total_matches',
-                            'Main Curve', 'Alternative Curve']]
+
+st.dataframe(selected_data[#['name', 'armorHighMMR', 'Player Ranking', 'avg',  'total_matches',
+                           # 'Main Curve', 'Alternative Curve']
+                           # TO-DO Temporary state or spell meta
+                            ['name', 'armorHighMMR', 'avg',  'total_matches']]
              .rename(columns={"name": "Hero", "armorHighMMR": "Armor", "avg": "Avg.",
                               "total_matches": "Games", "Player Ranking": "Ranking"})
              .set_index('Hero').sort_values(by="Avg.")
