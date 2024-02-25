@@ -5,7 +5,7 @@ import altair as alt
 import datetime
 import random
 
-TIMEFRAMES = ("Current Patch", "Last 7 days", "Last 3 days")
+TIMEFRAMES = ("Last 7 days", "Last 3 days", "Current Patch")
 TIMEFRAME_URL_PARAMETERS = {"Last 7 days": "past-seven",
                             "Last 3 days": "past-three",
                             "Current Patch": "last-patch"}
@@ -84,6 +84,8 @@ def load_data(timeframe):
                             'heroPowerPictureSmall',
                             'websites', 'isActive'], inplace=True)
 
+    firestone_api_update_time = firestone_json['lastUpdateDate'][:10] + ' ' + \
+                                firestone_json['lastUpdateDate'][11:19] + ' UTC+0'
     firestone_data = pd.DataFrame(firestone_json['heroStats'])
     firestone_data.rename(columns={'heroCardId': "id", 'dataPoints': "total_matches", 'averagePosition': "avg"},
                           inplace=True)
@@ -97,7 +99,7 @@ def load_data(timeframe):
 
     averages.drop(averages.loc[averages['name'].isna()].index, inplace=True)
 
-    return averages, firestone_update_time, bgknowhow_update_time
+    return averages, firestone_update_time, firestone_api_update_time, bgknowhow_update_time
 
 
 st.set_page_config(layout="wide",
@@ -109,7 +111,7 @@ title = st.title('Compare Heroes:')
 
 selected_timeframe = st.sidebar.selectbox('Time Frame', TIMEFRAMES)
 
-heroes, last_firestone_update, last_bgknowhow_update = \
+heroes, last_firestone_update, last_firestone_api_update, last_bgknowhow_update = \
     load_data(TIMEFRAME_URL_PARAMETERS[selected_timeframe])
 
 all_heroes = heroes['name'].unique()
@@ -118,8 +120,10 @@ all_heroes.sort()
 last_firestone_update = last_firestone_update.strftime("%Y-%m-%d %H:%M:%S %Z+0")
 last_bgknowhow_update = last_bgknowhow_update.strftime("%Y-%m-%d %H:%M:%S %Z+0")
 
-st.sidebar.markdown(f"Top 10%  averages updated at:"
+st.sidebar.markdown(f"Top 10% averages updated at:"
                     f"  \n{last_firestone_update}"
+                    f"  \nlastUpdateDate in API:"
+                    f"  \n{last_firestone_api_update}"
                     f"  \nprovided by [Firestone](https://www.firestoneapp.com/)")
 
 st.sidebar.markdown(f"Hero Data updated at:"
